@@ -118,7 +118,7 @@ function handleCloseOnEsc(e: KeyboardEvent) {
     handleClose()
   }
 }
-// const modalRef = useTemplateRef("modalRef")
+
 // 弹窗拖拽功能
 const modalPosition = ref({ x: 0, y: 0 })
 let dragState: {
@@ -215,13 +215,13 @@ function convertStringProps(prop: string | number | undefined) {
 const overlayStyle = computed(() => {
   return props.overlay
     ? {
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-      }
+      backgroundColor: "rgba(0, 0, 0, 0.2)",
+    }
     : {
-        // 没有遮罩时，允许背景滚动且不阻挡点击事件
-        backgroundColor: "transparent",
-        pointerEvents: "none" as const,
-      }
+      // 没有遮罩时，允许背景滚动且不阻挡点击事件
+      backgroundColor: "transparent",
+      pointerEvents: "none" as const,
+    }
 })
 
 const modalStyle = computed(() => {
@@ -271,28 +271,26 @@ onUnmounted(() => {
 <template>
   <Teleport :to="appendTo">
     <Transition name="modal-fade" @after-enter="emits('opened')" @after-leave="handleClosed">
-      <div
-        v-if="visible || !destroyOnClose"
-        v-show="visible"
-        class="overlay"
-        :style="{ ...overlayStyle, zIndex }"
-        @mousedown.self="handleOverlayMouseDown"
-        @mouseup.self="handleOverlayMouseUp"
-      >
+      <div v-if="visible || !destroyOnClose" v-show="visible" class="overlay" :style="{ ...overlayStyle, zIndex }"
+        @mousedown.self="handleOverlayMouseDown" @mouseup.self="handleOverlayMouseUp">
         <div ref="modalRef" class="modal-container" :style="modalStyle" @mousedown="handleModalMouseDown">
-          <header
-            v-if="$slots.header || title"
-            class="modal-header"
-            :style="{ cursor: draggable ? 'move' : 'default' }"
-            @mousedown="startDrag"
-          >
+          <header v-if="$slots.header || title" class="modal-header" :style="{ cursor: draggable ? 'move' : 'default' }"
+            @mousedown="startDrag">
             <slot name="header">
               <slot name="title">
                 <div class="title">{{ title }}</div>
               </slot>
-              <slot name="closeButton">
-                <div class="close-button" @click="handleClose">✖</div>
-              </slot>
+
+              <div class="close-button" @click="handleClose">
+                <slot name="closeButton">
+                  <svg t="1769795459616" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="1931" width="20" height="20">
+                    <path
+                      d="M572.91974805 512l242.82096754-242.82096757c16.30246778-16.30246778 16.30246778-43.75925563 0-60.91974802-16.30246778-16.30246778-43.75925563-16.30246778-60.91974802 0L512 451.08025195 269.17903243 208.25928441c-16.30246778-16.30246778-43.75925563-16.30246778-60.91974802 0-16.30246778 16.30246778-16.30246778 43.75925563 0 60.91974802L451.08025195 512l-242.82096754 242.82096757c-16.30246778 16.30246778-16.30246778 43.75925563 0 60.91974802 16.30246778 16.30246778 43.75925563 16.30246778 60.91974802 0l242.82096757-242.82096754 242.82096757 242.82096754c16.30246778 16.30246778 43.75925563 16.30246778 60.91974802 0 16.30246778-16.30246778 16.30246778-43.75925563 0-60.91974802L572.91974805 512z"
+                      fill="#3A414B" p-id="1932"></path>
+                  </svg>
+                </slot>
+              </div>
             </slot>
           </header>
           <main class="modal-main">
@@ -356,8 +354,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: normal;
-  font-size: 16px;
   cursor: pointer;
   width: 24px;
   height: 24px;
@@ -382,6 +378,7 @@ onUnmounted(() => {
     transition: transform 0.3s ease-out;
   }
 }
+
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
