@@ -1,14 +1,20 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
+    "lib": ["esnext", "DOM"],
+    "moduleDetection": "force",
+    "module": "preserve",
     "moduleResolution": "bundler",
-    "strict": true,
-    "jsx": "preserve",
     "resolveJsonModule": true,
+    "types": ["node"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
     "isolatedModules": true,
-    "skipDefaultLibCheck": true,
-    "lib": ["ESNext", "DOM"]
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

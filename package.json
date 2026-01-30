@@ -2,31 +2,41 @@
   "name": "vue3-modal",
   "version": "0.0.1",
   "description": "A lightweight Modal with elegant animations based on vue3",
-  "main": "index.cjs",
-  "module": "index.js",
+  "author": {
+    "name": "XFeng",
+    "email": "wxfengg@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxfengg/vue3-modal"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "sideEffects": false,
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "play": "vite",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "keywords": [],
+  "packageManager": "pnpm@10.13.1",
   "peerDependencies": {
     "vue": "^3.4.0 || ^3.5.0"
   },
-  "scripts": {
-    "dev": "vite --open",
-    "build": "vite build && vue-tsc -p tsconfig.build.json"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
   "devDependencies": {
     "@types/node": "^25.1.0",
     "@vitejs/plugin-vue": "^6.0.3",
+    "tsdown": "^0.20.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
+    "vue": "^3.5.27",
     "vue-tsc": "^3.2.4"
-  },
-  "dependencies": {
-    "vue": "^3.5.27"
   }
 }
