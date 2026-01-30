@@ -3,15 +3,13 @@ import vue from "@vitejs/plugin-vue"
 import { resolve } from "path"
 
 export default defineConfig({
+  // 项目根目录（index.html 文件所在的位置）
   root: "./playground",
+  plugins: [vue()],
   server: {
     host: true,
     port: 5173,
-    watch: {
-      usePolling: true,
-    },
   },
-  plugins: [vue()],
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
