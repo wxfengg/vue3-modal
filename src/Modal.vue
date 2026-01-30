@@ -376,10 +376,18 @@ onUnmounted(() => {
 /* 动画样式 (Vue Transition) */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease-in-out;
+
+  .modal-container {
+    transition: transform 0.3s ease-out;
+  }
 }
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+
+  .modal-container {
+    transform: scale(0.1);
+  }
 }
 </style>
