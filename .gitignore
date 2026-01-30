@@ -3,3 +3,7 @@ dist
 *.log
 .DS_Store
 .idea
+.github
+.vscode
+playground/node_modules
+playground/dist
