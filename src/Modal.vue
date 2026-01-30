@@ -14,7 +14,9 @@ interface Props {
   closeOnEsc?: boolean
   /** 是否允许点击遮罩关闭弹窗，默认 true */
   closeOnOverlay?: boolean
-  /** 是否需要遮罩，如果 false 弹窗背景可以滚动且遮罩相关属性不再生效 */
+  /** 是否锁定 body 滚动 */
+  lockScroll?: boolean
+  /** 是否需要遮罩 */
   overlay?: boolean
   /** 遮罩 z-index，默认 2000 */
   zIndex?: number
@@ -35,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   center: true,
   closeOnEsc: true,
   closeOnOverlay: true,
+  lockScroll: true,
   overlay: true,
   zIndex: 2000,
   destroyOnClose: false,
@@ -62,13 +65,25 @@ const emits = defineEmits<Emits>()
 
 const visible = defineModel<boolean>("modelValue", { required: true })
 watch(visible, (val) => {
+  lockScroll(val)
   if (val) {
     emits("open")
   } else {
     emits("close")
-    if (props.dragCloseReset) resetDragPosition()
   }
 })
+
+function handleClosed() {
+  emits("closed")
+  if (props.draggable && props.dragCloseReset) {
+    resetDragPosition()
+  }
+}
+
+function lockScroll(isLock: boolean) {
+  if (!props.lockScroll) return
+  document.body.style.overflow = isLock ? "hidden" : ""
+}
 
 /** 点击遮罩 */
 function handleClickOverlay() {
@@ -148,9 +163,9 @@ function onDrag(e: MouseEvent) {
     const { left, right, top, bottom } = dragState.startRect as DOMRect
 
     const maxLeftMove = -left
-    const maxRightMove = window.innerWidth - right
+    const maxRightMove = Math.max(0, window.innerWidth - right)
     const maxTopMove = -top
-    const maxBottomMove = window.innerHeight - bottom
+    const maxBottomMove = Math.abs(window.innerHeight - bottom)
 
     moveX = Math.min(Math.max(moveX, maxLeftMove), maxRightMove)
     moveY = Math.min(Math.max(moveY, maxTopMove), maxBottomMove)
@@ -255,38 +270,40 @@ onUnmounted(() => {
 
 <template>
   <Teleport :to="appendTo">
-    <div
-      v-if="visible || !destroyOnClose"
-      v-show="visible"
-      class="overlay"
-      :style="{ ...overlayStyle, zIndex }"
-      @mousedown.self="handleOverlayMouseDown"
-      @mouseup.self="handleOverlayMouseUp"
-    >
-      <div ref="modalRef" class="modal-container" :style="modalStyle" @mousedown="handleModalMouseDown">
-        <header
-          v-if="$slots.header || title"
-          class="modal-header"
-          :style="{ cursor: draggable ? 'move' : 'default' }"
-          @mousedown="startDrag"
-        >
-          <slot name="header">
-            <slot name="title">
-              <div class="title">{{ title }}</div>
+    <Transition name="modal-fade" @after-enter="emits('opened')" @after-leave="handleClosed">
+      <div
+        v-if="visible || !destroyOnClose"
+        v-show="visible"
+        class="overlay"
+        :style="{ ...overlayStyle, zIndex }"
+        @mousedown.self="handleOverlayMouseDown"
+        @mouseup.self="handleOverlayMouseUp"
+      >
+        <div ref="modalRef" class="modal-container" :style="modalStyle" @mousedown="handleModalMouseDown">
+          <header
+            v-if="$slots.header || title"
+            class="modal-header"
+            :style="{ cursor: draggable ? 'move' : 'default' }"
+            @mousedown="startDrag"
+          >
+            <slot name="header">
+              <slot name="title">
+                <div class="title">{{ title }}</div>
+              </slot>
+              <slot name="closeButton">
+                <div class="close-button" @click="handleClose">✖</div>
+              </slot>
             </slot>
-            <slot name="closeButton">
-              <div class="close-button" @click="handleClose">✖</div>
-            </slot>
-          </slot>
-        </header>
-        <main class="modal-main">
-          <slot />
-        </main>
-        <footer v-if="$slots.footer" class="modal-footer">
-          <slot name="footer" />
-        </footer>
+          </header>
+          <main class="modal-main">
+            <slot />
+          </main>
+          <footer v-if="$slots.footer" class="modal-footer">
+            <slot name="footer" />
+          </footer>
+        </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -316,16 +333,16 @@ onUnmounted(() => {
 .modal-container {
   border-radius: 12px;
   background-color: #fff;
-  margin-bottom: 50px;
   pointer-events: auto;
   height: fit-content;
+  margin-bottom: 50px;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 12px;
   border-bottom: 1px solid #e8e8e8;
   border-radius: 12px 12px 0 0;
 }
@@ -353,6 +370,16 @@ onUnmounted(() => {
 }
 
 .modal-main {
-  padding: 15px;
+  padding: 12px;
+}
+
+/* 动画样式 (Vue Transition) */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
 }
 </style>
