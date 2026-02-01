@@ -11,6 +11,10 @@ const visible6 = ref(false)
 const visible7 = ref(false)
 const visible8 = ref(false)
 const visible9 = ref(false)
+const visible10 = ref(false)
+const visible11 = ref(false)
+const visible12 = ref(false)
+const visible13 = ref(false)
 </script>
 
 <template>
@@ -22,10 +26,18 @@ const visible9 = ref(false)
     <button class="button" @click="visible5 = true">关闭方式</button>
     <button class="button" @click="visible6 = true">center</button>
     <div style="cursor: pointer" @click="visible7 = true">文字触发</div>
-    <button class="button" style="position: fixed; left: 10px; top: 10px" @click="visible8 = true">左上的按钮</button>
-    <button class="button" style="position: fixed; right: 10px; bottom: 10px" @click="visible9 = true">
-      右下的按钮
-    </button>
+
+    <!-- 四角按钮 -->
+    <button class="button corner-btn" style="left: 10px; top: 10px" @click="visible8 = true">左上</button>
+    <button class="button corner-btn" style="right: 10px; top: 10px" @click="visible10 = true">右上</button>
+    <button class="button corner-btn" style="left: 10px; bottom: 10px" @click="visible11 = true">左下</button>
+    <button class="button corner-btn" style="right: 10px; bottom: 10px" @click="visible9 = true">右下</button>
+
+    <!-- 边缘中间按钮 -->
+    <button class="button corner-btn" style="left: 50%; top: 10px; transform: translateX(-50%)"
+      @click="visible12 = true">上中</button>
+    <button class="button corner-btn" style="left: 50%; bottom: 10px; transform: translateX(-50%)"
+      @click="visible13 = true">下中</button>
 
     <Modal v-model="visible1" title="基础弹窗">
       <h4>基础的弹窗演示</h4>
@@ -62,14 +74,34 @@ const visible9 = ref(false)
       <div>如果 center 为 false 并且没有设置 top 默认也会设置 top(默认15vh)</div>
     </Modal>
 
-    <Modal v-model="visible8" title="左上角的按钮" width="800">
-      <div>左上角的按钮</div>
-      <div style="height: 500px; background-color: skyblue">占位</div>
+    <Modal v-model="visible8" title="左上角" width="600">
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: skyblue">占位</div>
     </Modal>
 
-    <Modal v-model="visible9" title="右下角的按钮" width="500" :center="false">
-      <div>右下角的按钮</div>
-      <div style="height: 500px; background-color: darkgray">占位</div>
+    <Modal v-model="visible9" title="右下角" width="500">
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: darkgray">占位</div>
+    </Modal>
+
+    <Modal v-model="visible10" title="右上角" width="600">
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: lightgreen">占位</div>
+    </Modal>
+
+    <Modal v-model="visible11" title="左下角" width="600">
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: lightsalmon">占位</div>
+    </Modal>
+
+    <Modal v-model="visible12" title="上方中间" width="600" draggable>
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: lightcoral">占位</div>
+    </Modal>
+
+    <Modal v-model="visible13" title="下方中间" width="600">
+      <div>弹窗自动从点击位置展开，关闭时收回到该位置</div>
+      <div style="height: 300px; background-color: mediumpurple">占位</div>
     </Modal>
   </div>
 </template>
@@ -107,5 +139,11 @@ body {
 
 .button:active {
   opacity: 0.7;
+}
+
+.corner-btn {
+  position: fixed;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 </style>

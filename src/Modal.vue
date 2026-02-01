@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onUnmounted } from "vue"
+import { ref, watch, computed, onUnmounted, nextTick } from "vue"
 
 interface Props {
   /** 标题，默认值为："默认标题"。如果不需要弹窗的 header ，设置 title 为 null */
@@ -78,6 +78,8 @@ function handleClosed() {
   if (props.draggable && props.dragCloseReset) {
     resetDragPosition()
   }
+  // 清理点击位置，避免下次打开时使用旧位置
+  clickPosition.value = null
 }
 
 function lockScroll(isLock: boolean) {
@@ -238,9 +240,10 @@ const modalStyle = computed(() => {
     style.marginTop = "15vh"
   }
 
-  // 如果拖拽则使用计算位置
+  // 拖拽位置使用 CSS 变量，避免与动画 transform 冲突
   if (props.draggable) {
-    style.transform = `translate(${modalPosition.value.x}px, ${modalPosition.value.y}px)`
+    style["--modal-x"] = `${modalPosition.value.x}px`
+    style["--modal-y"] = `${modalPosition.value.y}px`
   }
 
   return style
@@ -260,9 +263,107 @@ function convertToNumber(value: string) {
   return !Number.isNaN(num) && num.toString() === value ? num : value
 }
 
+// 点击位置，用于动画起点（自动捕获全局点击位置）
+const clickPosition = ref<{ x: number; y: number } | null>(null)
+
+/** 全局点击事件：记录每次点击的位置 */
+function captureClickPosition(e: MouseEvent) {
+  clickPosition.value = { x: e.clientX, y: e.clientY }
+}
+
+// 监听全局点击，捕获点击位置用于弹窗动画（passive 提升滚动性能）
+window.addEventListener("click", captureClickPosition, { capture: true, passive: true })
+
+/**
+ * 打开弹窗（可选传入坐标覆盖自动捕获的位置）
+ * @param position 可选的坐标对象，不传则使用自动捕获的点击位置
+ */
+function open(position?: { x: number; y: number }) {
+  if (position) {
+    clickPosition.value = { x: position.x, y: position.y }
+  }
+  visible.value = true
+}
+
+/**
+ * 关闭弹窗
+ */
+function close() {
+  visible.value = false
+}
+
+/**
+ * 计算弹窗最终位置（用于动画 transform-origin 计算）
+ */
+function calcModalFinalPosition(containerWidth: number, containerHeight: number) {
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+
+  // 水平居中
+  const finalLeft = (viewportWidth - containerWidth) / 2
+
+  // 垂直位置：top > center > default(15vh)
+  let finalTop: number
+  if (top.value) {
+    finalTop = typeof top.value === "number" ? top.value : Number.parseFloat(top.value as string) || 0
+    if (typeof props.top === "string" && props.top.includes("vh")) {
+      finalTop = (viewportHeight * Number.parseFloat(props.top)) / 100
+    }
+  } else if (props.center) {
+    finalTop = (viewportHeight - containerHeight) / 2
+  } else {
+    finalTop = viewportHeight * 0.15
+  }
+
+  return { left: finalLeft, top: finalTop }
+}
+
+/**
+ * 计算并设置 transform-origin，使动画从点击位置展开/收回
+ * @param el overlay 元素
+ * @param isEnter 是否是进入动画（进入时需要预计算最终位置）
+ */
+function setTransformOrigin(el: Element, isEnter = false) {
+  const container = (el as HTMLElement).querySelector(".modal-container") as HTMLElement
+  if (!container || !clickPosition.value) {
+    container?.style.setProperty("transform-origin", "center center")
+    return
+  }
+
+  let originX: number
+  let originY: number
+
+  if (isEnter) {
+    // 进入动画：预计算弹窗最终位置
+    const { left, top } = calcModalFinalPosition(container.offsetWidth, container.offsetHeight)
+    originX = clickPosition.value.x - left
+    originY = clickPosition.value.y - top
+  } else {
+    // 离开动画：使用当前实际位置
+    const rect = container.getBoundingClientRect()
+    originX = clickPosition.value.x - rect.left
+    originY = clickPosition.value.y - rect.top
+  }
+
+  container.style.transformOrigin = `${originX}px ${originY}px`
+}
+
+/** Transition before-enter 钩子：设置动画起点 */
+function handleBeforeEnter(el: Element) {
+  nextTick(() => setTransformOrigin(el, true))
+}
+
+/** Transition before-leave 钩子：确保关闭动画使用相同的起点 */
+function handleBeforeLeave(el: Element) {
+  setTransformOrigin(el, false)
+}
+
+defineExpose({ open, close })
+
 window.addEventListener("keydown", handleCloseOnEsc)
 onUnmounted(() => {
   window.removeEventListener("keydown", handleCloseOnEsc)
+  window.removeEventListener("click", captureClickPosition, { capture: true })
   // 确保拖拽相关事件也被清理
   stopDrag()
 })
@@ -270,7 +371,8 @@ onUnmounted(() => {
 
 <template>
   <Teleport :to="appendTo">
-    <Transition name="modal-fade" @after-enter="emits('opened')" @after-leave="handleClosed">
+    <Transition name="modal-fade" @before-enter="handleBeforeEnter" @after-enter="emits('opened')"
+      @before-leave="handleBeforeLeave" @after-leave="handleClosed">
       <div v-if="visible || !destroyOnClose" v-show="visible" class="overlay" :style="{ ...overlayStyle, zIndex }"
         @mousedown.self="handleOverlayMouseDown" @mouseup.self="handleOverlayMouseUp">
         <div ref="modalRef" class="modal-container" :style="modalStyle" @mousedown="handleModalMouseDown">
@@ -334,6 +436,11 @@ onUnmounted(() => {
   pointer-events: auto;
   height: fit-content;
   margin-bottom: 50px;
+  will-change: transform, opacity;
+  /* 使用 CSS 变量实现拖拽位移，默认为 0 */
+  --modal-x: 0px;
+  --modal-y: 0px;
+  transform: translate(var(--modal-x), var(--modal-y));
 }
 
 .modal-header {
@@ -370,12 +477,21 @@ onUnmounted(() => {
 }
 
 /* 动画样式 (Vue Transition) */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease-in-out;
+.modal-fade-enter-active {
+  transition: opacity 0.25s ease-out;
 
   .modal-container {
-    transition: transform 0.3s ease-out;
+    /* 弹性展开动画 */
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease-in;
+
+  .modal-container {
+    /* 收缩动画稍快，更干脆 */
+    transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1);
   }
 }
 
@@ -384,7 +500,8 @@ onUnmounted(() => {
   opacity: 0;
 
   .modal-container {
-    transform: scale(0.1);
+    /* 组合 translate（拖拽位置）和 scale（动画缩放） */
+    transform: translate(var(--modal-x), var(--modal-y)) scale(0.3);
   }
 }
 </style>
