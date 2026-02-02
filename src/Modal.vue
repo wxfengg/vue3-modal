@@ -268,6 +268,7 @@ const clickPosition = ref<{ x: number; y: number } | null>(null)
 
 /** 全局点击事件：记录每次点击的位置 */
 function captureClickPosition(e: MouseEvent) {
+  if (visible.value) return
   clickPosition.value = { x: e.clientX, y: e.clientY }
 }
 
@@ -300,7 +301,7 @@ function calcModalFinalPosition(containerWidth: number, containerHeight: number)
   const viewportHeight = window.innerHeight
 
   // 水平居中
-  const finalLeft = (viewportWidth - containerWidth) / 2
+  let finalLeft = (viewportWidth - containerWidth) / 2
 
   // 垂直位置：top > center > default(15vh)
   let finalTop: number
@@ -313,6 +314,12 @@ function calcModalFinalPosition(containerWidth: number, containerHeight: number)
     finalTop = (viewportHeight - containerHeight) / 2
   } else {
     finalTop = viewportHeight * 0.15
+  }
+
+  // 如果有拖拽偏移，需要加上偏移量
+  if (props.draggable) {
+    finalLeft += modalPosition.value.x
+    finalTop += modalPosition.value.y
   }
 
   return { left: finalLeft, top: finalTop }
@@ -358,8 +365,6 @@ function handleBeforeLeave(el: Element) {
   setTransformOrigin(el, false)
 }
 
-defineExpose({ open, close })
-
 window.addEventListener("keydown", handleCloseOnEsc)
 onUnmounted(() => {
   window.removeEventListener("keydown", handleCloseOnEsc)
@@ -367,6 +372,8 @@ onUnmounted(() => {
   // 确保拖拽相关事件也被清理
   stopDrag()
 })
+
+defineExpose({ open, close })
 </script>
 
 <template>
