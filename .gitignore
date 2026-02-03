@@ -5,5 +5,4 @@ dist
 .idea
 .github
 .vscode
-playground/node_modules
-playground/dist
+docs/.vitepress/cache
