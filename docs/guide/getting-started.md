@@ -36,6 +36,12 @@ const visible = ref(false)
 - 点击遮罩关闭（`closeOnOverlay`，默认 `true`；且 `overlay` 必须为 `true`）
 - 代码关闭：`visible = false`
 
+如果你使用的是默认 footer 按钮（见下文 `footerButtons`），通常会这样写：
+
+```vue
+<Modal v-model="visible" @cancel="visible = false" @confirm="visible = false" />
+```
+
 ## Teleport（appendTo）
 
 默认挂载到 `body`。你也可以指定选择器或 DOM 元素：
@@ -137,6 +143,7 @@ import { Modal } from "vue3-modal"
 | `dragCloseReset` | `boolean`               | `false`      | 关闭时是否重置拖拽位置（需 `draggable=true`）                       |
 | `dragOverflow`   | `boolean`               | `false`      | 拖拽是否允许超出可视区                                              |
 | `appendTo`       | `string \| HTMLElement` | `'body'`     | Teleport 挂载目标（选择器或元素）                                   |
+| `footerButtons`  | `boolean`               | `true`       | 是否显示默认 footer 按钮                                            |
 
 ### Emits
 
@@ -148,16 +155,20 @@ import { Modal } from "vue3-modal"
 | `closed`       | —    | 关闭动画结束（Transition after-leave） |
 | `closeOnEsc`   | —    | 即将因 `Esc` 关闭前触发                |
 | `clickOverlay` | —    | 点击遮罩触发（且 `overlay=true`）      |
+| `cancel`       | —    | 默认 footer 的“取消”按钮点击           |
+| `confirm`      | —    | 默认 footer 的“确认”按钮点击           |
 
 ### Slots
 
-| 名称          | 说明                                         |
-| ------------- | -------------------------------------------- |
-| `default`     | 内容区                                       |
-| `header`      | 自定义整个 header（包含标题与关闭按钮区域）  |
-| `title`       | 仅自定义标题区域（在默认 header 内）         |
-| `closeButton` | 自定义关闭按钮内容                           |
-| `footer`      | footer 内容（仅当提供该 slot 时渲染 footer） |
+| 名称          | 说明                                        |
+| ------------- | ------------------------------------------- |
+| `default`     | 内容区                                      |
+| `header`      | 自定义整个 header（包含标题与关闭按钮区域） |
+| `title`       | 仅自定义标题区域（在默认 header 内）        |
+| `closeButton` | 自定义关闭按钮内容                          |
+| `footer`      | 自定义 footer（会替换默认 footer 按钮）     |
+
+> 说明：footer 的渲染条件是「提供 `#footer` 或 `footerButtons=true`」。如果 `footerButtons=false` 且未提供 `#footer`，则不渲染 footer。
 
 ### Expose（组件方法）
 

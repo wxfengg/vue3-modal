@@ -36,6 +36,12 @@ const visible = ref(false)
 - Click the overlay (`closeOnOverlay`, default `true`, and `overlay` must be `true`)
 - Programmatically: `visible = false`
 
+If you keep the default footer buttons (see `footerButtons` below), a common pattern is:
+
+```vue
+<Modal v-model="visible" @cancel="visible = false" @confirm="visible = false" />
+```
+
 ## Teleport (appendTo)
 
 By default the modal is teleported to `body`. You can target a selector or an element:
@@ -128,6 +134,7 @@ import { Modal } from "vue3-modal"
 | `dragCloseReset` | `boolean`               | `false`      | Reset position after close (requires `draggable=true`)                          |
 | `dragOverflow`   | `boolean`               | `false`      | Allow dragging beyond viewport                                                  |
 | `appendTo`       | `string \| HTMLElement` | `'body'`     | Teleport target (selector or element)                                           |
+| `footerButtons`  | `boolean`               | `true`       | Show the default footer buttons                                                 |
 
 ### Emits
 
@@ -139,16 +146,20 @@ import { Modal } from "vue3-modal"
 | `closed`       | —       | After leave transition finishes          |
 | `closeOnEsc`   | —       | Right before closing due to `Esc`        |
 | `clickOverlay` | —       | When overlay is clicked (`overlay=true`) |
+| `cancel`       | —       | Clicking the default “Cancel” button     |
+| `confirm`      | —       | Clicking the default “Confirm” button    |
 
 ### Slots
 
-| Name          | Description                                        |
-| ------------- | -------------------------------------------------- |
-| `default`     | Main content                                       |
-| `header`      | Replace the entire header                          |
-| `title`       | Replace the title area inside default header       |
-| `closeButton` | Replace close button content                       |
-| `footer`      | Footer content (renders footer only when provided) |
+| Name          | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `default`     | Main content                                    |
+| `header`      | Replace the entire header                       |
+| `title`       | Replace the title area inside default header    |
+| `closeButton` | Replace close button content                    |
+| `footer`      | Custom footer (replaces default footer buttons) |
+
+> Note: the footer renders when `#footer` is provided OR `footerButtons=true`. If `footerButtons=false` and no `#footer` is provided, the footer is not rendered.
 
 ### Expose
 
