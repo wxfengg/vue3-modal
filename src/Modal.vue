@@ -30,6 +30,8 @@ interface Props {
   dragOverflow?: boolean
   /** 弹窗挂载到哪个 DOM 元素，默认 body */
   appendTo?: string | HTMLElement
+  /** 是否显示默认 footer 按钮 */
+  footerButtons?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   title: "默认标题",
@@ -45,6 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
   dragCloseReset: false,
   dragOverflow: false,
   appendTo: "body",
+  footerButtons: true,
 })
 
 interface Emits {
@@ -60,6 +63,10 @@ interface Emits {
   (e: "close"): void
   /** 弹窗关闭动画完成的回调 */
   (e: "closed"): void
+  /** 取消按钮点击的回调 */
+  (e: "cancel"): void
+  /** 确认按钮点击的回调 */
+  (e: "confirm"): void
 }
 const emits = defineEmits<Emits>()
 
@@ -92,7 +99,7 @@ function handleClickOverlay() {
   if (!props.overlay) return
   emits("clickOverlay")
   // 如果开启允许点击遮罩关闭弹窗 则关闭弹窗
-  if (visible.value && props.closeOnOverlay) handleClose()
+  if (visible.value && props.closeOnOverlay) close()
 }
 
 // 点击遮罩关闭处理，预防点击弹窗内容时触发关闭
@@ -117,7 +124,7 @@ function handleOverlayMouseUp() {
 function handleCloseOnEsc(e: KeyboardEvent) {
   if (e.key === "Escape" && visible.value && props.closeOnEsc) {
     emits("closeOnEsc")
-    handleClose()
+    close()
   }
 }
 
@@ -201,8 +208,31 @@ function resetDragPosition() {
   }
 }
 
-/** 弹窗关闭入口 */
-function handleClose() {
+/** 取消按钮点击 */
+function handleCancel() {
+  emits("cancel")
+}
+
+/** 确认按钮点击 */
+function handleConfirm() {
+  emits("confirm")
+}
+
+/**
+ * 打开弹窗（可选传入坐标覆盖自动捕获的位置）
+ * @param position 可选的坐标对象，不传则使用自动捕获的点击位置
+ */
+function open(position?: { x: number; y: number }) {
+  if (position) {
+    clickPosition.value = { x: position.x, y: position.y }
+  }
+  visible.value = true
+}
+
+/**
+ * 关闭弹窗
+ */
+function close() {
   visible.value = false
 }
 
@@ -275,24 +305,6 @@ function captureClickPosition(e: MouseEvent) {
 
 // 监听全局点击，捕获点击位置用于弹窗动画（passive 提升滚动性能）
 window.addEventListener("click", captureClickPosition, { capture: true, passive: true })
-
-/**
- * 打开弹窗（可选传入坐标覆盖自动捕获的位置）
- * @param position 可选的坐标对象，不传则使用自动捕获的点击位置
- */
-function open(position?: { x: number; y: number }) {
-  if (position) {
-    clickPosition.value = { x: position.x, y: position.y }
-  }
-  visible.value = true
-}
-
-/**
- * 关闭弹窗
- */
-function close() {
-  visible.value = false
-}
 
 /**
  * 计算弹窗最终位置（用于动画 transform-origin 计算）
@@ -406,7 +418,7 @@ defineExpose({ open, close })
                 <div class="title">{{ title }}</div>
               </slot>
 
-              <div class="close-button" @click="handleClose">
+              <div class="close-button" @click="close">
                 <slot name="closeButton">
                   <svg
                     t="1769795459616"
@@ -431,8 +443,13 @@ defineExpose({ open, close })
           <main class="modal-main">
             <slot />
           </main>
-          <footer v-if="$slots.footer" class="modal-footer">
-            <slot name="footer" />
+          <footer v-if="$slots.footer || footerButtons" class="modal-footer">
+            <slot name="footer">
+              <div class="footer-button">
+                <button class="button cancel-button" @click="handleCancel">取消</button>
+                <button class="button" @click="handleConfirm">确认</button>
+              </div>
+            </slot>
           </footer>
         </div>
       </div>
@@ -508,6 +525,42 @@ defineExpose({ open, close })
 
 .modal-main {
   padding: 12px;
+}
+
+.modal-footer .footer-button {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px;
+  /* border-top: 1px solid #e8e8e8; */
+  /* border-radius: 0 0 12px 12px; */
+  /* background-color: #f5f5f5; */
+}
+
+.button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #333;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+  font-size: 14px;
+  text-align: center;
+}
+
+.cancel-button {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+.button:active {
+  opacity: 0.6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 动画样式 (Vue Transition) */

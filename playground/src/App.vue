@@ -34,17 +34,35 @@ const visible13 = ref(false)
     <button class="button corner-btn" style="right: 10px; bottom: 10px" @click="visible9 = true">右下</button>
 
     <!-- 边缘中间按钮 -->
-    <button class="button corner-btn" style="left: 50%; top: 10px; transform: translateX(-50%)"
-      @click="visible12 = true">上中</button>
-    <button class="button corner-btn" style="left: 50%; bottom: 10px; transform: translateX(-50%)"
-      @click="visible13 = true">下中</button>
+    <button
+      class="button corner-btn"
+      style="left: 50%; top: 10px; transform: translateX(-50%)"
+      @click="visible12 = true"
+    >
+      上中
+    </button>
+    <button
+      class="button corner-btn"
+      style="left: 50%; bottom: 10px; transform: translateX(-50%)"
+      @click="visible13 = true"
+    >
+      下中
+    </button>
 
-    <Modal v-model="visible1" title="基础弹窗">
+    <Modal v-model="visible1" title="基础弹窗" @cancel="visible1 = false" @confirm="visible1 = false">
       <h4>基础的弹窗演示</h4>
       <div>这是一个基础的弹窗，它很普通</div>
+      <div>它预设了 footerButtons ，你如果不需要可以通过 footer 插槽覆盖或者设置 footerButtons 为 false去掉</div>
     </Modal>
 
-    <Modal v-model="visible2" title="无遮罩弹窗" width="500" :overlay="false" :lock-scroll="false">
+    <Modal
+      v-model="visible2"
+      title="无遮罩弹窗"
+      width="500"
+      :overlay="false"
+      :lock-scroll="false"
+      :footer-buttons="false"
+    >
       <h4>无遮罩弹窗演示</h4>
       <div>没有遮罩，像是一个悬浮窗。遮罩相关的API不生效</div>
     </Modal>
@@ -70,7 +88,7 @@ const visible13 = ref(false)
       <div style="height: 1800px; background-color: plum">占位</div>
     </Modal>
 
-    <Modal v-model="visible7" title="top" width="300" top="10vh">
+    <Modal v-model="visible7" title="文字触发" width="300" top="10vh" :footer-buttons="false" :close-on-esc="false">
       <div>如果 center 为 false 并且没有设置 top 默认也会设置 top(默认15vh)</div>
     </Modal>
 
@@ -137,8 +155,11 @@ body {
   font-size: 16px;
 }
 
+.button:hover {
+  opacity: 0.8;
+}
 .button:active {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .corner-btn {
